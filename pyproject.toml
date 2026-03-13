@@ -10,12 +10,14 @@ dependencies = [
   "xalpha==0.12.3",
   "pandas==1.5.3",
   "pydantic==2.10.6",
+  "pydantic-settings==2.5.2",
+  "supabase==1.2.0",
 ]
 
 [project.optional-dependencies]
 dev = [
   "pytest==8.3.5",
-  "httpx==0.28.1",
+  "httpx==0.24.1",
 ]
 
 [build-system]
