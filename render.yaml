@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: best-select-backend-dev
+    env: docker
+    plan: free
+    autoDeploy: true
+    branch: develop
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: APP_ENV
+        value: dev
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_TABLE_SNAPSHOTS
+        value: market_snapshots
+
+  - type: web
+    name: best-select-backend-prod
+    env: docker
+    plan: free
+    autoDeploy: true
+    branch: main
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: APP_ENV
+        value: prod
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_TABLE_SNAPSHOTS
+        value: market_snapshots

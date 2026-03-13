@@ -1,6 +1,8 @@
 from fastapi import FastAPI, Query
 from pydantic import BaseModel
 
+from app.core.config import PublicRuntimeConfig, get_settings
+from app.db.supabase_client import SupabaseSnapshotRepository
 from app.services.market_service import MarketService
 
 
@@ -12,13 +14,54 @@ class FundSnapshotResponse(BaseModel):
     source: str
 
 
-app = FastAPI(title="best-select backend", version="0.1.0")
-service = MarketService()
+class AppInfoResponse(BaseModel):
+    name: str
+    version: str
+    status: str
+
+
+class DbHealthResponse(BaseModel):
+    status: str
+    configured: bool
+
+
+settings = get_settings()
+snapshot_repository = SupabaseSnapshotRepository(settings)
+
+app = FastAPI(title=settings.app_name, version=settings.app_version)
+service = MarketService(snapshot_repository=snapshot_repository)
+
+
+@app.get("/", response_model=AppInfoResponse)
+def root() -> AppInfoResponse:
+    return AppInfoResponse(name=settings.app_name, version=settings.app_version, status="running")
 
 
 @app.get("/healthz")
 def healthz() -> dict:
     return {"status": "ok"}
+
+
+@app.get("/api/v1/healthz")
+def api_healthz() -> dict:
+    return {"status": "ok"}
+
+
+@app.get("/api/v1/runtime", response_model=PublicRuntimeConfig)
+def runtime() -> PublicRuntimeConfig:
+    return PublicRuntimeConfig(
+        app_env=settings.app_env,
+        app_version=settings.app_version,
+        supabase_enabled=snapshot_repository.enabled,
+    )
+
+
+@app.get("/api/v1/db/healthz", response_model=DbHealthResponse)
+def db_healthz() -> DbHealthResponse:
+    if not snapshot_repository.enabled:
+        return DbHealthResponse(status="not_configured", configured=False)
+
+    return DbHealthResponse(status="ok" if snapshot_repository.check_connection() else "error", configured=True)
 
 
 @app.get("/market/snapshot", response_model=FundSnapshotResponse)
