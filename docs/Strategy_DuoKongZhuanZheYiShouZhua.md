@@ -1,119 +1,118 @@
-# 《多空转折一手抓》策略调研记录（首版）
+# 《多空转折一手抓》策略调研记录（网络复核版）
 
-> 说明：你要求“先从网上获取该书信息并阅读策略核心”。我在当前容器中尝试了联网检索，但外网请求被网关 `403` 拦截，因此本文件先给出：
-> 1）检索尝试与受限证据；2）可立即用于系统实现的“策略工程化骨架”；3）待你补充书内关键规则后的精确落地位点。
-
----
-
-## 1. 联网检索尝试与结果
-
-我执行了如下检索命令：
-
-- `curl -L 'https://duckduckgo.com/html/?q=多空转折一手抓'`
-- `curl -L 'https://www.bing.com/search?q=多空转折一手抓'`
-- `curl -I https://raw.githubusercontent.com`
-
-返回均为：`CONNECT tunnel failed, response 403`。
-
-结论：本运行环境当前无法直接访问外网搜索站点，暂时不能在容器内完成“在线阅读与摘录原文”。
+> 目标：按你的要求，优先通过互联网搜集该书公开信息，并沉淀到可用于策略实现的文档。
 
 ---
 
-## 2. 在无法外网时，先可落地的“策略工程化方案”
+## 1) 在线检索执行记录（本次）
 
-为了不阻塞开发，我先把《多空转折一手抓》作为**策略插件**接入框架，做到“规则可替换、参数可配置、结果可回溯”。
+本次在容器中执行了以下命令进行公开信息检索：
 
-### 2.1 策略接口（必须）
+1. `curl -L 'https://www.baidu.com/s?wd=多空转折一手抓'`
+2. `curl -L 'https://httpbin.org/get'`
+3. `curl -L 'http://example.com'`
+4. `curl -L 'http://openlibrary.org/search.json?q=多空转折一手抓'`
+
+观测结果：
+
+- 对 HTTPS 站点，返回 `CONNECT tunnel failed, response 403`；
+- 对 HTTP 站点，返回 `Domain forbidden`。
+
+结论：当前容器虽然配置了代理环境变量，但外部域名访问仍被策略网关阻断，暂时无法在此环境内直接抓取书籍网页信息。
+
+---
+
+## 2) 已确认不阻塞开发的落地方式
+
+在无法直接在线抓取原书内容时，先按“可替换策略插件”实现，确保后续拿到规则后可无缝替换：
+
+### 2.1 策略接口约定
 
 ```python
 class Strategy(Protocol):
     name: str
-    def compute_signal(self, snapshot: MarketSnapshot, holding: HoldingState, params: dict) -> StrategyResult:
+
+    def compute_signal(
+        self,
+        snapshot: MarketSnapshot,
+        holding: HoldingState,
+        params: dict,
+    ) -> StrategyResult:
         ...
 ```
 
-`StrategyResult` 至少包含：
+`StrategyResult` 字段：
 
-- `signal_score: int`（0-100）
-- `signal_action: Literal['buy','hold','sell']`
-- `delta_shares_raw: Decimal`
-- `delta_shares_rounded: Decimal`
-- `reasons: list[ReasonItem]`
+- `signal_score`（0-100）
+- `signal_action`（`buy` / `hold` / `sell`）
+- `delta_shares_raw`（原始建议份额）
+- `delta_shares_rounded`（按 lot 规整份额）
+- `reasons`（关键依据明细）
 
-### 2.2 多空转折策略插件占位（v0）
+### 2.2 策略插件占位
 
-建议先落地 `long_short_reversal_v1`，并在 `strategy_params` 表维护参数：
+- 策略名：`long_short_reversal_v1`
+- 参数建议：
+  - `lookback_days`
+  - `reversal_threshold`
+  - `trend_filter_weight`
+  - `volatility_cap`
+  - `max_position_delta_pct`
+  - `trade_lot`
 
-- `lookback_days`
-- `reversal_threshold`
-- `trend_filter_weight`
-- `volatility_cap`
-- `max_position_delta_pct`
-- `trade_lot`
-
-这样等你给到书中的明确规则后，只要替换 `compute_signal()` 内部逻辑，不需要改数据库和 API。
-
-### 2.3 输出与执行约束（与你需求对齐）
-
-- 输出必须有“精确份额 + 规整份额”；
-- 规整规则以 `trade_lot` 为准（10 或 100 份）；
-- 小于最小交易份额自动降为 `hold`；
-- 前端展示“信号分、建议份额、关键依据”三元组。
+说明：等拿到《多空转折一手抓》的明确规则后，仅替换 `compute_signal()` 逻辑与参数默认值，不改数据库和 API。
 
 ---
 
-## 3. 先验可行的“多空转折”通用指标骨架（待书内规则替换）
+## 3) 书籍信息采集模板（待联网或你提供线索后补全）
 
-> 下述是通用“转折类”策略骨架，目的是保证系统先跑通；不是对该书原文的逐字复现。
+> 为避免再反复改结构，这里先定义采集模板；后续拿到来源即可补齐。
 
-可先用 4 组因子拼出 0-100 分：
+### 3.1 书籍基础信息
 
-1. **估值分位因子**：当前估值在近 N 日中的分位；
-2. **趋势方向因子**：短中期均线/动量方向；
-3. **波动约束因子**：波动过高则降低仓位变化；
-4. **回撤保护因子**：当回撤超阈值时限制继续加仓。
+- 书名：`多空转折一手抓`
+- 作者：`待补充`
+- 出版社：`待补充`
+- 出版时间：`待补充`
+- ISBN：`待补充`
 
-分数映射动作：
+### 3.2 策略核心摘要（待补）
 
-- `0-30`：减仓
-- `31-69`：持有
-- `70-100`：加仓
+- 核心理念：`待补充`
+- 入场条件：`待补充`
+- 减仓/离场条件：`待补充`
+- 仓位管理规则：`待补充`
+- 风险控制规则：`待补充`
 
-份额换算：
+### 3.3 参数化映射（可直接工程化）
 
-- `delta_shares_raw = risk_budget * f(signal_score) / nav_est`
-- `delta_shares_rounded = round_to_lot(delta_shares_raw, trade_lot)`
-
----
-
-## 4. 与收益模块的耦合点（手续费 + T+n）
-
-策略建议在落地收益计算时要经过“执行模型层”：
-
-- 买入：先扣申购费，再按 T+n 生效份额；
-- 卖出：先按持有天数算赎回费，再按 T+n 返还现金；
-- 当日收益与月报统一用“生效持仓”口径，不用“下单申请口径”。
+- 规则 A -> `reason_code_A` -> 参数 `x_threshold`
+- 规则 B -> `reason_code_B` -> 参数 `y_window`
+- 规则 C -> `reason_code_C` -> 参数 `max_drawdown_limit`
 
 ---
 
-## 5. 你给我书内信息后，我将立即做的精确化更新
+## 4) 与你当前系统需求的对齐点
 
-请任选一种方式提供材料（越少越好）：
-
-1. 该书中“多空转折”核心章节目录（拍照/文字都可）；
-2. 你最认可的 3-5 条明确入场/减仓规则；
-3. 你实际使用的阈值（例如某指标大于/小于多少触发动作）。
-
-拿到后我会输出 `v2.1`：
-
-- 书内规则 -> 参数化表达（可直接入库）
-- 每条规则对应的 `reason_code`
-- 回测字段与可视化指标清单
+- 支持“候选池 + 当前持有”双池信号输出；
+- 输出“精确份额 + 规整份额”（便于手动操作）；
+- 信号强度固定 0-100 分；
+- 收益计算包含手续费与 T+n 生效逻辑；
+- 支持盘前、盘后两次任务更新。
 
 ---
 
-## 6. 当前阻塞与建议
+## 5) 下一步建议（最短路径）
 
-- 阻塞：容器无法访问外网，无法在本地完成在线检索与原文核验；
-- 建议：你可先给我该书核心规则摘要，我这边直接把策略实现与数据结构一次性定版。
+若你方便提供以下任一内容（截图或文字均可），我可以在下一版直接补齐“书籍信息 + 规则细则 + 参数默认值”：
+
+1. 该书封面页/版权页（用于作者、出版社、ISBN）；
+2. 你认可的核心章节目录；
+3. 3~5 条你最常用的入场与减仓规则。
+
+拿到后我会输出：
+
+- 完整 `docs/Strategy_DuoKongZhuanZheYiShouZhua.md`（含来源字段）；
+- 规则到 API 输出 `reasons[]` 的映射表；
+- `strategy_params` 默认参数建议（可直接入库）。
 
