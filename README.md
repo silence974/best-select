@@ -1,5 +1,6 @@
 # best-select
 
-项目初步规划文档见：
+项目规划文档：
 
-- `docs/initial-planning.md`
+- 初版：`docs/initial-planning.md`
+- v2（已合并你的偏好）：`docs/planning-v2.md`
