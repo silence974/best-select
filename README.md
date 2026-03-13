@@ -51,7 +51,7 @@ docker compose up --build -d
 
 `render.yaml` 已定义两个服务：
 
-- `best-select-backend-dev`：跟踪 `develop` 分支，`APP_ENV=dev`
+- `best-select-backend-dev`：跟踪 `work` 分支，`APP_ENV=dev`
 - `best-select-backend-prod`：跟踪 `main` 分支，`APP_ENV=prod`
 
 两个服务都需配置：
