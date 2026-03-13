@@ -8,7 +8,7 @@
 
 ## 2. 当前实现状态
 
-- 已新增 Render Blueprint：`render.yaml`，区分 `work`（dev）和 `main`（prod）两个服务。
+- 已新增 Render Blueprint：`render.yaml`，区分 `develop`（dev）和 `main`（prod）两个服务。
 - 已新增 GitHub Pages workflow：`.github/workflows/deploy-pages.yml`。
 - 已新增后端 CI workflow：`.github/workflows/backend-ci.yml`。
 - 已在后端加入 Supabase Repository：读取 `SUPABASE_URL`、`SUPABASE_SERVICE_ROLE_KEY`，并在获取快照后自动 upsert。

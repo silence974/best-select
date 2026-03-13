@@ -4,7 +4,7 @@ services:
     env: docker
     plan: free
     autoDeploy: true
-    branch: work
+    branch: develop
     dockerfilePath: ./Dockerfile
     envVars:
       - key: APP_ENV

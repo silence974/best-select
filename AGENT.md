@@ -11,7 +11,7 @@
 - 后端：FastAPI（`backend/app/main.py`）
 - 数据落库：`SupabaseSnapshotRepository`（`backend/app/db/supabase_client.py`）
 - 部署：
-  - Render：`render.yaml`（`work -> dev`，`main -> prod`）
+  - Render：`render.yaml`（`develop -> dev`，`main -> prod`）
   - GitHub Pages：`.github/workflows/deploy-pages.yml` + `frontend/index.html`
 - CI：`.github/workflows/backend-ci.yml`
 
@@ -22,7 +22,7 @@
    - 只在 Render 环境变量中保存 `SUPABASE_SERVICE_ROLE_KEY`。
 
 2. **环境区分**
-   - `work` 分支部署 dev 服务，`APP_ENV=dev`。
+   - `develop` 分支部署 dev 服务，`APP_ENV=dev`。
    - `main` 分支部署 prod 服务，`APP_ENV=prod`。
 
 3. **API 版本化**
